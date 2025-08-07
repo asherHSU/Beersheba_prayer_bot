@@ -1,5 +1,5 @@
 Flask>=2.0.0
 functions-framework>=3.0.0
-line-bot-sdk==3.17.1
+line-bot-sdk<3.0.0 # 或您使用的版本
 python-dotenv>=0.15.0
-google-cloud-firestore>=2.7.0
+google-cloud-firestore==2.16.0 # <--- 明確指定最新穩定版
