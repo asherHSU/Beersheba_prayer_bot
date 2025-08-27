@@ -72,7 +72,7 @@ GCP_PROJECT_ID="您的 GCP 專案 ID"
 TARGET_GROUP_ID="您要讓 Bot 服務的目標 LINE 群組 ID"
 ```
 部署至 Google Cloud Functions
-使用以下指令進行部署。請務必將 `[YOUR_..._HERE] 的部分替換為您自己的實際資訊。
+使用以下指令進行部署。請務必將 `[YOUR_..._HERE]` 的部分替換為您自己的實際資訊。
 ```
 gcloud functions deploy prayer-bot-webhook \
   --gen2 \
@@ -102,3 +102,4 @@ gcloud functions deploy prayer-bot-webhook \
 - `.gcloudignore`: 指定 gcloud CLI 部署時應忽略的檔案。
  
 - `picture/`: 存放圖文選單設計圖等圖片資源。
+
