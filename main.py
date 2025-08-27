@@ -126,24 +126,29 @@ USER_HELP_MESSAGE = """📖 代禱事項小幫手 - 指令說明 📖
 🙋 您可以使用的指令 (建議私訊我喔！)
   ▪️ 加入代禱
      (將您自動加入代禱名單)
+     
   ▪️ 修改我的名字 [您的新名字]
      (更新您在名單上的顯示名稱)
+     
   ▪️ 代禱 [您的事項內容]
-     (更新您的代禱事項)
+     (更新您的代禱事項) 中括號可以不用打，但記得在代禱與事項內容中間需要空格
+     
   ▪️ 代禱 同上週
      (使用上週的代禱事項)
+     
   ▪️ 我的代禱
      (查詢您目前的代禱事項)
+     
+  ▪️ 代禱列表
+     (查詢所有人的代禱事項)
      
 💡 其他
   ▪️ 幫助 或 help
      (顯示此幫助訊息)
 
 💡 範例
-    1️⃣ 加入代禱
+    1️⃣ 加入代禱 (第一次使用)
     2️⃣ 代禱 期末考順利
-    
-✨ 同心守望，彼此代禱！ ✨
 """
 
 ADMIN_HELP_MESSAGE = """👑 代禱事項小幫手 - 指令說明 (管理員版) 
@@ -161,7 +166,6 @@ ADMIN_HELP_MESSAGE = """👑 代禱事項小幫手 - 指令說明 (管理員版)
   ▪️ 我的代禱
   ▪️ 名單列表 (私訊專用)
   ▪️ 修改成員名字 [舊名字] [新名字]
-  ▪️ 名單設定 [名字1] [名字2] ... (手動覆蓋名單)
   
 💡 其他
   ▪️ 幫助 或 help
@@ -426,7 +430,7 @@ def handle_command_start_prayer(group_id, user_id, text_received):
         group_data_snapshot = group_doc_ref.get()
         
         if not group_data_snapshot.exists:
-            return "錯誤：找不到群組設定資料。請先透過 加入代禱 或 名單設定 建立名單。"
+            return "錯誤：找不到群組設定資料。請先透過 加入代禱 建立名單。"
         
         group_data = group_data_snapshot.to_dict()
         members_map = group_data.get('members', {})
@@ -600,9 +604,9 @@ def handle_command_prayer_list(group_id, user_id):
         if not TARGET_GROUP_ID:
             return "抱歉，Bot 目前設定有誤 (TGID missing)。"
         
-        # 在私訊中，必須是管理員才能查詢
-        if not is_group_admin(TARGET_GROUP_ID, user_id):
-            return "抱歉，您不是管理員，無法在私訊中使用此指令。😅"
+        # # 在私訊中，必須是管理員才能查詢
+        # if not is_group_admin(TARGET_GROUP_ID, user_id):
+        #     return "抱歉，您不是管理員，無法在私訊中使用此指令。😅"
         
         target_group_id_to_query = TARGET_GROUP_ID
         print(f"INFO (繁中): 管理員 {user_id} 正在透過私訊查詢群組 {target_group_id_to_query} 的代禱列表。")
@@ -612,7 +616,7 @@ def handle_command_prayer_list(group_id, user_id):
         group_data_snapshot = group_doc_ref.get()
 
         if not group_data_snapshot.exists:
-            return "錯誤：找不到此群組的設定資料。請先透過 加入代禱 或 名單設定 建立名單。"
+            return "錯誤：找不到此群組的設定資料。請先透過 加入代禱 建立名單。"
         
         group_data = group_data_snapshot.to_dict()
         current_round_id = group_data.get('current_round_id')
@@ -867,8 +871,8 @@ def handle_command_list_members(user_id, group_id=None):
         return "抱歉，Bot 目前設定有誤 (TGID missing)。"
 
     # # 權限檢查：必須是管理員
-    # if not is_group_admin(TARGET_GROUP_ID, user_id):
-    #     return "抱歉，您不是此代禱群組的管理員，無法使用此指令。😅"
+    if not is_group_admin(TARGET_GROUP_ID, user_id):
+        return "抱歉，您不是此代禱群組的管理員，無法使用此指令。😅"
 
     try:
         group_doc_ref = db.collection('prayer_groups').document(TARGET_GROUP_ID)
@@ -1071,18 +1075,15 @@ if sdk_initialized_successfully and handler:
         if isinstance(event.source, SourceUser):
             print(f"INFO (繁中): 收到來自用戶 {user_id} 的私訊: {text_received}")
             if text_received.lower() in ["幫助", "help"]:
-                # 呼叫新的幫助函式，私訊時 group_id 傳入 None
                 reply_text = handle_command_help(user_id, None) 
             elif text_received.lower() == "加入代禱":
                 reply_text = handle_command_join_prayer(user_id)
             elif text_received.lower() == "代禱列表":
-                # 呼叫函式，私訊時 group_id 傳入 None
                 reply_text = handle_command_prayer_list(None, user_id)
             elif text_received.lower().startswith("代禱"):
                 reply_text = handle_command_update_prayer(user_id, text_received)
             elif text_received.lower() == "我的代禱":
                 reply_text = handle_command_my_prayer(user_id)
-            # ... in handle_text_message, inside the SourceUser block ...
             elif text_received.lower().startswith("開始代禱"):
                 reply_text = handle_command_start_prayer_dm(user_id, text_received)
             elif text_received.lower() == "結束代禱":
@@ -1093,8 +1094,8 @@ if sdk_initialized_successfully and handler:
                 reply_text = handle_command_edit_member_name(user_id, text_received, None)
             elif text_received.lower().startswith("修改我的名字"):
                 reply_text = handle_command_edit_my_name(user_id, text_received)
-            
-        
+
+
         elif isinstance(event.source, SourceGroup):
             group_id = event.source.group_id
             print(f"INFO (繁中): 收到來自群組 {group_id} (使用者 {user_id}) 的訊息: {text_received}")
